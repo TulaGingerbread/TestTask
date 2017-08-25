@@ -16,4 +16,9 @@ class College {
         id column: 'id'
         name column: 'name'
     }
+
+    @Override
+    public String toString() {
+        return name
+    }
 }

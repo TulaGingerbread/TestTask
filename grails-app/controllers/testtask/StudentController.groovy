@@ -1,5 +1,6 @@
 package testtask
 
+import org.springframework.web.multipart.MultipartHttpServletRequest
 
 import static org.springframework.http.HttpStatus.*
 import grails.transaction.Transactional
@@ -12,6 +13,35 @@ class StudentController {
     def index(Integer max) {
         params.max = Math.min(max ?: 10, 100)
         respond Student.list(params), model: [studentInstanceCount: Student.count()]
+    }
+
+    def upload() {
+
+    }
+
+    def saveCSV() {
+        def multiRequest = (MultipartHttpServletRequest) request
+        def files = multiRequest.getFiles('studentCSV')
+        files.each { f ->
+            def bin = new BufferedReader(new InputStreamReader(f.getInputStream()))
+            bin.lines().forEach({ String line ->
+                def array = line.split(';|,')
+                try {
+                    new Student( // we assume here that our CSV file has reliable format
+                            email: array[0],
+                            firstName: array[1],
+                            lastName: array[2],
+                            documentID: array[3],
+                            college: College.findByName(array[4])
+                    ).save()
+                }
+                catch (Exception e) {
+                    println e.message // TODO log it properly
+                }
+            })
+        }
+        flash.message = message(code: 'student.uploaded.success')
+        redirect(action: 'index', params: '')
     }
 
     def show(Student studentInstance) {

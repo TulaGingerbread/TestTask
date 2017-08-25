@@ -26,4 +26,9 @@ class Student {
         email column: 'email'
         college column: 'college'
     }
+
+    @Override
+    public String toString() {
+        return firstName + ' ' + lastName
+    }
 }
