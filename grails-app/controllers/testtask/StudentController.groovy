@@ -7,6 +7,7 @@ import grails.transaction.Transactional
 
 @Transactional(readOnly = true)
 class StudentController {
+    def mailService
 
     static allowedMethods = [save: "POST", update: "PUT", delete: "DELETE"]
 
@@ -25,18 +26,34 @@ class StudentController {
         files.each { f ->
             def bin = new BufferedReader(new InputStreamReader(f.getInputStream()))
             bin.lines().forEach({ String line ->
-                def array = line.split(';|,')
+                def array = line.split(';|,') // we assume here that our CSV file has a bit reliable format
                 try {
-                    new Student( // we assume here that our CSV file has reliable format
-                            email: array[0],
-                            firstName: array[1],
-                            lastName: array[2],
-                            documentID: array[3],
-                            college: College.findByName(array[4])
+                    if (array.length < 5) throw new ParseException("Line is malformed, too few entries")
+                    def studentMail = array[0].trim()
+                    if (!studentMail.empty && studentMail !=~ /[\w\-\_\.]+@[\w]+\.[\w]{2,3}/) throw new ParseException("Invalid email") // TODO check for being email
+                    def firstName = array[1].trim()
+                    def lastName = array[2].trim()
+                    if (firstName.empty || lastName.empty) throw new ParseException("Name is not provided")
+                    def docID = array[3].trim()
+                    def college = College.findByName(array[4].trim())
+                    if (college == null) throw new ParseException("College with that name not found")
+                    new Student(
+                            email: studentMail,
+                            firstName: firstName,
+                            lastName: lastName,
+                            documentID: docID,
+                            college: college
                     ).save()
+                    /*mailService.sendMail { // TODO install mail plugin and send that mail
+                        from "testtask@gmail.com"
+                        to studentMail
+                        subject "Hello"
+                        html "Hello ${firstName}"
+                    }*/
                 }
-                catch (Exception e) {
-                    println e.message // TODO log it properly
+                catch (ParseException e) {
+                    println "[ERROR] Got parse error: " + e.message + " in line" // TODO log it properly
+                    println "        " + line
                 }
             })
         }

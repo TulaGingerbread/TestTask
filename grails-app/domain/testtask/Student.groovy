@@ -13,7 +13,7 @@ class Student {
         firstName nullable: false
         lastName nullable: false
         documentID nullable: true
-        email nullable: true
+        email nullable: true, email: true
         college nullable: false
     }
 
