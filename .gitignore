@@ -31,8 +31,13 @@
 /plugins
 /web-app/plugins
 
+#tests
+/test
+
 # "temporary" build files
 /target
 
+/.idea
 
+.asscache
 
