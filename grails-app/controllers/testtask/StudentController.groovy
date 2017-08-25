@@ -30,7 +30,7 @@ class StudentController {
                 try {
                     if (array.length < 5) throw new ParseException("Line is malformed, too few entries")
                     def studentMail = array[0].trim()
-                    if (!studentMail.empty && studentMail !=~ /[\w\-\_\.]+@[\w]+\.[\w]{2,3}/) throw new ParseException("Invalid email") // TODO check for being email
+                    if (!studentMail.empty && !(studentMail ==~ /[\w\-\_\.]+@[\w]+\.[\w]{2,3}/)) throw new ParseException("Invalid email")
                     def firstName = array[1].trim()
                     def lastName = array[2].trim()
                     if (firstName.empty || lastName.empty) throw new ParseException("Name is not provided")
@@ -44,6 +44,9 @@ class StudentController {
                             documentID: docID,
                             college: college
                     ).save()
+                    // I did not enable this plugin and try to send mail because
+                    // I probably have broken environment or whatever so I can't install the damn plugin
+                    // and this shouldn't be a problem on a working environment
                     /*mailService.sendMail { // TODO install mail plugin and send that mail
                         from "testtask@gmail.com"
                         to studentMail
@@ -52,8 +55,10 @@ class StudentController {
                     }*/
                 }
                 catch (ParseException e) {
-                    println "[ERROR] Got parse error: " + e.message + " in line" // TODO log it properly
-                    println "        " + line
+                    new LogEntry(
+                            message: e.message,
+                            line: line
+                    ).save()
                 }
             })
         }
